@@ -18,7 +18,6 @@ import java.util.UUID;
 public class LeaveRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "staff_id", nullable = false)
@@ -48,6 +47,7 @@ public class LeaveRequest {
     private final List<LeaveManagementDomainEvent> domainEvents = new ArrayList<>();
 
     protected LeaveRequest() {
+        // required by JPA
     }
 
     private LeaveRequest(UUID staffId, DateRange dateRange, LeaveType leaveType,
@@ -85,8 +85,9 @@ public class LeaveRequest {
     }
 
     public void cancel() {
+        boolean wasApproved = this.status == RequestStatus.APPROVED;
         transitionTo(RequestStatus.CANCELLED);
-        domainEvents.add(new LeaveRequestCancelledEvent(id, staffId));
+        domainEvents.add(new LeaveRequestCancelledEvent(id, staffId, wasApproved, dateRange.numberOfDays()));
     }
 
     private void raiseOutcomeEvent(boolean approved) {

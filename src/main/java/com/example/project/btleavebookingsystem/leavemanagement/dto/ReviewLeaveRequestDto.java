@@ -1,4 +1,4 @@
 package com.example.project.btleavebookingsystem.leavemanagement.dto;
 
-public class ReviewLeaveRequestDto {
+public record ReviewLeaveRequestDto(boolean approved) {
 }

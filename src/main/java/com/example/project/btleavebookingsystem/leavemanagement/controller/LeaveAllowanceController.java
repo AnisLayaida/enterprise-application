@@ -1,4 +1,41 @@
 package com.example.project.btleavebookingsystem.leavemanagement.controller;
 
+import com.example.project.btleavebookingsystem.identityaccess.security.AuthenticatedUser;
+import com.example.project.btleavebookingsystem.leavemanagement.dto.AmendLeaveAllowanceDto;
+import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveAllowanceResponseDto;
+import com.example.project.btleavebookingsystem.leavemanagement.service.command.AmendLeaveAllowanceService;
+import com.example.project.btleavebookingsystem.leavemanagement.service.query.GetMyLeaveBalanceService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/leave-allowance")
 public class LeaveAllowanceController {
+
+    private final GetMyLeaveBalanceService getMyLeaveBalanceService;
+    private final AmendLeaveAllowanceService amendLeaveAllowanceService;
+
+    public LeaveAllowanceController(GetMyLeaveBalanceService getMyLeaveBalanceService,
+                                    AmendLeaveAllowanceService amendLeaveAllowanceService) {
+        this.getMyLeaveBalanceService = getMyLeaveBalanceService;
+        this.amendLeaveAllowanceService = amendLeaveAllowanceService;
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<LeaveAllowanceResponseDto> getMine(Authentication authentication) {
+        AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
+        return ResponseEntity.ok(getMyLeaveBalanceService.getForStaff(user.staffId()));
+    }
+
+    @PatchMapping("/{staffId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<LeaveAllowanceResponseDto> amend(@PathVariable UUID staffId,
+                                                           @Valid @RequestBody AmendLeaveAllowanceDto dto) {
+        return ResponseEntity.ok(amendLeaveAllowanceService.amend(staffId, dto.entitledDays()));
+    }
 }

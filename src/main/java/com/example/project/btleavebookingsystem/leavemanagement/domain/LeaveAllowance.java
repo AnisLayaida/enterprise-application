@@ -10,7 +10,6 @@ import java.util.UUID;
 public class LeaveAllowance {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "staff_id", nullable = false)
