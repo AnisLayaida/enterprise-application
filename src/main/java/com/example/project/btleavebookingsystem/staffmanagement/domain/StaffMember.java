@@ -48,7 +48,7 @@ public class StaffMember {
         this.employmentStatus = employmentStatus;
     }
 
-    void applyUpdate(String department, String jobLevel, EmploymentStatus employmentStatus) {
+    public void applyUpdate(String department, String jobLevel, EmploymentStatus employmentStatus) {
         this.department = department;
         this.jobLevel = jobLevel;
         this.employmentStatus = employmentStatus;

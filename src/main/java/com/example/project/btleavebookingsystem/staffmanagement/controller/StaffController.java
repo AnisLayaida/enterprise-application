@@ -6,8 +6,10 @@ import com.example.project.btleavebookingsystem.identityaccess.repository.RoleRe
 import com.example.project.btleavebookingsystem.identityaccess.repository.UserRepository;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveAllowance;
 import com.example.project.btleavebookingsystem.leavemanagement.repository.LeaveAllowanceRepository;
+import com.example.project.btleavebookingsystem.shared.exception.ResourceNotFoundException;
 import com.example.project.btleavebookingsystem.staffmanagement.domain.StaffMember;
 import com.example.project.btleavebookingsystem.staffmanagement.dto.AddStaffMemberDto;
+import com.example.project.btleavebookingsystem.staffmanagement.dto.AmendStaffMemberDto;
 import com.example.project.btleavebookingsystem.staffmanagement.dto.StaffMemberResponseDto;
 import com.example.project.btleavebookingsystem.staffmanagement.repository.StaffMemberRepository;
 import jakarta.validation.Valid;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Year;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -65,5 +68,36 @@ public class StaffController {
         leaveAllowanceRepository.save(allowance);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(StaffMemberResponseDto.from(staffMember));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<StaffMemberResponseDto>> getAll() {
+        List<StaffMemberResponseDto> staff = staffMemberRepository.findAll().stream()
+                .map(StaffMemberResponseDto::from)
+                .toList();
+        return ResponseEntity.ok(staff);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StaffMemberResponseDto> getById(@PathVariable UUID id) {
+        StaffMember staffMember = staffMemberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff member not found: " + id));
+        return ResponseEntity.ok(StaffMemberResponseDto.from(staffMember));
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public ResponseEntity<StaffMemberResponseDto> amend(@PathVariable UUID id,
+                                                        @Valid @RequestBody AmendStaffMemberDto dto) {
+        StaffMember staffMember = staffMemberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff member not found: " + id));
+
+        staffMember.applyUpdate(dto.department(), dto.jobLevel(), dto.employmentStatus());
+        staffMemberRepository.save(staffMember);
+
+        return ResponseEntity.ok(StaffMemberResponseDto.from(staffMember));
     }
 }

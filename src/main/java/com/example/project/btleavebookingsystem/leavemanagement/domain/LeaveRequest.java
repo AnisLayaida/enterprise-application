@@ -47,7 +47,6 @@ public class LeaveRequest {
     private final List<LeaveManagementDomainEvent> domainEvents = new ArrayList<>();
 
     protected LeaveRequest() {
-        // required by JPA
     }
 
     private LeaveRequest(UUID staffId, DateRange dateRange, LeaveType leaveType,
@@ -80,6 +79,9 @@ public class LeaveRequest {
     }
 
     public void resolveHRReview(boolean approved) {
+        if (status == RequestStatus.MANAGER_REVIEWED) {
+            transitionTo(RequestStatus.HR_REVIEW);
+        }
         transitionTo(approved ? RequestStatus.APPROVED : RequestStatus.REJECTED);
         raiseOutcomeEvent(approved);
     }
