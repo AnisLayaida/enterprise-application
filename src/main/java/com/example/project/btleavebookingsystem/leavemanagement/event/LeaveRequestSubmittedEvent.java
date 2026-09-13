@@ -1,4 +1,7 @@
 package com.example.project.btleavebookingsystem.leavemanagement.event;
 
-public class LeaveRequestSubmittedEvent {
+import java.util.UUID;
+
+public record LeaveRequestSubmittedEvent(UUID leaveRequestId, UUID staffId)
+        implements LeaveManagementDomainEvent {
 }

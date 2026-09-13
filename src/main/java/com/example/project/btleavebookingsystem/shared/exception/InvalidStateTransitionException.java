@@ -1,4 +1,7 @@
 package com.example.project.btleavebookingsystem.shared.exception;
 
-public class InvalidStateTransitionException {
+public class InvalidStateTransitionException extends RuntimeException {
+    public InvalidStateTransitionException(String message) {
+        super(message);
+    }
 }
