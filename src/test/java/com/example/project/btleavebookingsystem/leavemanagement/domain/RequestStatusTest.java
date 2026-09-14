@@ -44,4 +44,14 @@ class RequestStatusTest {
         assertThat(RequestStatus.REJECTED.canTransitionTo(RequestStatus.CANCELLED)).isTrue();
         assertThat(RequestStatus.APPROVED.canTransitionTo(RequestStatus.PENDING)).isFalse();
     }
+
+    @Test
+    void onlyRejectedAndCancelledAreInactive() {
+        assertThat(RequestStatus.PENDING.isActive()).isTrue();
+        assertThat(RequestStatus.MANAGER_REVIEWED.isActive()).isTrue();
+        assertThat(RequestStatus.HR_REVIEW.isActive()).isTrue();
+        assertThat(RequestStatus.APPROVED.isActive()).isTrue();
+        assertThat(RequestStatus.REJECTED.isActive()).isFalse();
+        assertThat(RequestStatus.CANCELLED.isActive()).isFalse();
+    }
 }

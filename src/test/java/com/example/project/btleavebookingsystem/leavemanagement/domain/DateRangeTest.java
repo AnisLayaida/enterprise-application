@@ -35,4 +35,25 @@ class DateRangeTest {
         assertThatThrownBy(() -> new DateRange(null, LocalDate.of(2026, 10, 10)))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void overlappingRangesReturnTrue() {
+        DateRange rangeA = new DateRange(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 10));
+        DateRange rangeB = new DateRange(LocalDate.of(2026, 10, 8), LocalDate.of(2026, 10, 12));
+        assertThat(rangeA.overlaps(rangeB)).isTrue();
+    }
+
+    @Test
+    void touchingBoundaryDatesCountAsOverlapping() {
+        DateRange rangeA = new DateRange(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 10));
+        DateRange rangeB = new DateRange(LocalDate.of(2026, 10, 10), LocalDate.of(2026, 10, 14));
+        assertThat(rangeA.overlaps(rangeB)).isTrue();
+    }
+
+    @Test
+    void nonOverlappingRangesWithAGapReturnFalse() {
+        DateRange rangeA = new DateRange(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 10));
+        DateRange rangeB = new DateRange(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 16));
+        assertThat(rangeA.overlaps(rangeB)).isFalse();
+    }
 }

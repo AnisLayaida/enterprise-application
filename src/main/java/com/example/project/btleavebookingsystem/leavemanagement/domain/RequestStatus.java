@@ -24,4 +24,8 @@ public enum RequestStatus {
     public boolean canTransitionTo(RequestStatus next) {
         return ALLOWED_TRANSITIONS.getOrDefault(this, Set.of()).contains(next);
     }
+
+    public boolean isActive() {
+        return this != REJECTED && this != CANCELLED;
+    }
 }

@@ -15,6 +15,7 @@ public class DateRange {
     private LocalDate endDate;
 
     protected DateRange() {
+        // required by JPA
     }
 
     public DateRange(LocalDate startDate, LocalDate endDate) {
@@ -33,5 +34,9 @@ public class DateRange {
 
     public long numberOfDays() {
         return ChronoUnit.DAYS.between(startDate, endDate) + 1;
+    }
+
+    public boolean overlaps(DateRange other) {
+        return !this.endDate.isBefore(other.startDate) && !other.endDate.isBefore(this.startDate);
     }
 }
