@@ -27,6 +27,7 @@ public class LeaveRequestController {
     private final GetMyLeaveRequestsService getMyLeaveRequestsService;
     private final GetTeamPendingRequestsService getTeamPendingRequestsService;
     private final GetOutstandingRequestsService getOutstandingRequestsService;
+    private final GetLeaveRequestByIdService getLeaveRequestByIdService;
 
     public LeaveRequestController(SubmitLeaveRequestService submitLeaveRequestService,
                                   ReviewLeaveRequestService reviewLeaveRequestService,
@@ -34,7 +35,8 @@ public class LeaveRequestController {
                                   ResolveHRReviewService resolveHRReviewService,
                                   GetMyLeaveRequestsService getMyLeaveRequestsService,
                                   GetTeamPendingRequestsService getTeamPendingRequestsService,
-                                  GetOutstandingRequestsService getOutstandingRequestsService) {
+                                  GetOutstandingRequestsService getOutstandingRequestsService,
+                                  GetLeaveRequestByIdService getLeaveRequestByIdService) {
         this.submitLeaveRequestService = submitLeaveRequestService;
         this.reviewLeaveRequestService = reviewLeaveRequestService;
         this.cancelLeaveRequestService = cancelLeaveRequestService;
@@ -42,6 +44,7 @@ public class LeaveRequestController {
         this.getMyLeaveRequestsService = getMyLeaveRequestsService;
         this.getTeamPendingRequestsService = getTeamPendingRequestsService;
         this.getOutstandingRequestsService = getOutstandingRequestsService;
+        this.getLeaveRequestByIdService = getLeaveRequestByIdService;
     }
 
     @PostMapping
@@ -49,6 +52,12 @@ public class LeaveRequestController {
                                                           Authentication authentication) {
         AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
         return ResponseEntity.status(HttpStatus.CREATED).body(submitLeaveRequestService.submit(user.staffId(), dto));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<LeaveRequestResponseDto> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(getLeaveRequestByIdService.getById(id));
     }
 
     @PatchMapping("/{id}/review")

@@ -2,10 +2,13 @@ package com.example.project.btleavebookingsystem.leavemanagement.controller;
 
 import com.example.project.btleavebookingsystem.identityaccess.security.AuthenticatedUser;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.AmendLeaveAllowanceDto;
+import com.example.project.btleavebookingsystem.leavemanagement.dto.CreateLeaveAllowanceDto;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveAllowanceResponseDto;
 import com.example.project.btleavebookingsystem.leavemanagement.service.command.AmendLeaveAllowanceService;
+import com.example.project.btleavebookingsystem.leavemanagement.service.command.CreateLeaveAllowanceService;
 import com.example.project.btleavebookingsystem.leavemanagement.service.query.GetMyLeaveBalanceService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -19,17 +22,32 @@ public class LeaveAllowanceController {
 
     private final GetMyLeaveBalanceService getMyLeaveBalanceService;
     private final AmendLeaveAllowanceService amendLeaveAllowanceService;
+    private final CreateLeaveAllowanceService createLeaveAllowanceService;
 
     public LeaveAllowanceController(GetMyLeaveBalanceService getMyLeaveBalanceService,
-                                    AmendLeaveAllowanceService amendLeaveAllowanceService) {
+                                    AmendLeaveAllowanceService amendLeaveAllowanceService,
+                                    CreateLeaveAllowanceService createLeaveAllowanceService) {
         this.getMyLeaveBalanceService = getMyLeaveBalanceService;
         this.amendLeaveAllowanceService = amendLeaveAllowanceService;
+        this.createLeaveAllowanceService = createLeaveAllowanceService;
     }
 
     @GetMapping("/mine")
     public ResponseEntity<LeaveAllowanceResponseDto> getMine(Authentication authentication) {
         AuthenticatedUser user = (AuthenticatedUser) authentication.getPrincipal();
         return ResponseEntity.ok(getMyLeaveBalanceService.getForStaff(user.staffId()));
+    }
+
+    @GetMapping("/{staffId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<LeaveAllowanceResponseDto> getForStaff(@PathVariable UUID staffId) {
+        return ResponseEntity.ok(getMyLeaveBalanceService.getForStaff(staffId));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<LeaveAllowanceResponseDto> create(@Valid @RequestBody CreateLeaveAllowanceDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(createLeaveAllowanceService.create(dto));
     }
 
     @PatchMapping("/{staffId}")

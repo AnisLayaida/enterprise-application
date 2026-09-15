@@ -11,8 +11,11 @@ import com.example.project.btleavebookingsystem.staffmanagement.domain.StaffMemb
 import com.example.project.btleavebookingsystem.staffmanagement.dto.AddStaffMemberDto;
 import com.example.project.btleavebookingsystem.staffmanagement.dto.AmendStaffMemberDto;
 import com.example.project.btleavebookingsystem.staffmanagement.dto.StaffMemberResponseDto;
+import com.example.project.btleavebookingsystem.staffmanagement.event.StaffMemberAddedEvent;
+import com.example.project.btleavebookingsystem.staffmanagement.event.StaffMemberUpdatedEvent;
 import com.example.project.btleavebookingsystem.staffmanagement.repository.StaffMemberRepository;
 import jakarta.validation.Valid;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,15 +38,17 @@ public class StaffController {
     private final RoleRepository roleRepository;
     private final LeaveAllowanceRepository leaveAllowanceRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public StaffController(StaffMemberRepository staffMemberRepository, UserRepository userRepository,
                            RoleRepository roleRepository, LeaveAllowanceRepository leaveAllowanceRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, ApplicationEventPublisher eventPublisher) {
         this.staffMemberRepository = staffMemberRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.leaveAllowanceRepository = leaveAllowanceRepository;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     @PostMapping
@@ -66,6 +71,10 @@ public class StaffController {
         LeaveAllowance allowance = new LeaveAllowance(
                 staffMember.getId(), Year.now().getValue(), DEFAULT_ANNUAL_ENTITLEMENT_DAYS);
         leaveAllowanceRepository.save(allowance);
+
+        eventPublisher.publishEvent(new StaffMemberAddedEvent(
+                staffMember.getId(), staffMember.getFirstName(), staffMember.getSurname(),
+                staffMember.getEmail(), staffMember.getDepartment()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(StaffMemberResponseDto.from(staffMember));
     }
@@ -97,6 +106,9 @@ public class StaffController {
 
         staffMember.applyUpdate(dto.department(), dto.jobLevel(), dto.employmentStatus());
         staffMemberRepository.save(staffMember);
+
+        eventPublisher.publishEvent(new StaffMemberUpdatedEvent(
+                staffMember.getId(), dto.department(), dto.jobLevel(), dto.employmentStatus().name()));
 
         return ResponseEntity.ok(StaffMemberResponseDto.from(staffMember));
     }

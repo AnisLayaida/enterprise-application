@@ -7,15 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DirtiesContext
 @SpringBootTest
 @AutoConfigureMockMvc
 class LeaveRequestControllerIntegrationTest {
@@ -116,5 +119,67 @@ class LeaveRequestControllerIntegrationTest {
                         .content(submitBody))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void adminCanFetchASingleLeaveRequestByIdAfterItIsSubmitted() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String staffToken = createStaffAndReturnToken(adminToken, "getbyid.tester." + UUID.randomUUID());
+
+        String submitBody = """
+                {
+                  "leaveType": "ANNUAL",
+                  "startDate": "2026-12-01",
+                  "endDate": "2026-12-03",
+                  "reason": "GetById test",
+                  "requiresHRApproval": false
+                }
+                """;
+
+        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submitBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        mockMvc.perform(get("/api/leave-requests/" + requestId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(requestId))
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void staffCannotFetchALeaveRequestByIdDirectlyDueToRoleRestriction() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String staffTokenA = createStaffAndReturnToken(adminToken, "staffa." + UUID.randomUUID());
+
+        String submitBody = """
+                {
+                  "leaveType": "ANNUAL",
+                  "startDate": "2026-12-10",
+                  "endDate": "2026-12-11",
+                  "reason": "Restricted lookup test",
+                  "requiresHRApproval": false
+                }
+                """;
+
+        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
+                        .header("Authorization", "Bearer " + staffTokenA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submitBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        mockMvc.perform(get("/api/leave-requests/" + requestId)
+                        .header("Authorization", "Bearer " + staffTokenA))
+                .andExpect(status().isForbidden());
     }
 }
