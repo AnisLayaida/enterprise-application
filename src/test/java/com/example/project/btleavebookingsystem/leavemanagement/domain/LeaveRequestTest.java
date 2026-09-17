@@ -15,8 +15,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class LeaveRequestTest {
 
     private final UUID staffId = UUID.randomUUID();
+
     private final DateRange fiveDayRange = new DateRange(
-            LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 10));
+            LocalDate.of(2026, 10, 5), LocalDate.of(2026, 10, 9));
 
     @Test
     void submitCreatesPendingRequestAndRaisesSubmittedEvent() {
