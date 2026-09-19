@@ -4,13 +4,14 @@ import com.example.project.btleavebookingsystem.leavemanagement.domain.DateRange
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveRequest;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveType;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveRequestResponseDto;
+import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestApprovedEvent;
+import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestEscalatedToHREvent;
 import com.example.project.btleavebookingsystem.leavemanagement.repository.LeaveRequestRepository;
 import com.example.project.btleavebookingsystem.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -62,11 +63,11 @@ class ReviewLeaveRequestServiceTest {
         LeaveRequestResponseDto response = service.review(request.getId(), true);
 
         assertThat(response.status().name()).isEqualTo("APPROVED");
-        verify(eventPublisher).publishEvent(any(Object.class));
+        verify(eventPublisher).publishEvent(any(LeaveRequestApprovedEvent.class));
     }
 
     @Test
-    void reviewEscalatesToManagerReviewedAndPublishesNoEventWhenHrRequired() {
+    void reviewEscalatesToManagerReviewedAndPublishesEscalationEventWhenHrRequired() {
         LeaveRequest request = LeaveRequest.submit(staffId, fiveDayRange, LeaveType.ANNUAL, "Holiday", true);
         request.pullDomainEvents();
         when(leaveRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
@@ -74,6 +75,6 @@ class ReviewLeaveRequestServiceTest {
         LeaveRequestResponseDto response = service.review(request.getId(), true);
 
         assertThat(response.status().name()).isEqualTo("MANAGER_REVIEWED");
-        verify(eventPublisher, Mockito.never()).publishEvent(any());
+        verify(eventPublisher).publishEvent(any(LeaveRequestEscalatedToHREvent.class));
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -181,5 +182,49 @@ class LeaveRequestControllerIntegrationTest {
         mockMvc.perform(get("/api/leave-requests/" + requestId)
                         .header("Authorization", "Bearer " + staffTokenA))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void historyReplaysThePersistedEventStreamToTheSameStatusAsTheStateTable() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String staffToken = createStaffAndReturnToken(adminToken, "history.tester." + UUID.randomUUID());
+
+        String submitBody = """
+                {
+                  "leaveType": "ANNUAL",
+                  "startDate": "2026-12-14",
+                  "endDate": "2026-12-16",
+                  "reason": "Event store test",
+                  "requiresHRApproval": false
+                }
+                """;
+
+        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submitBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        mockMvc.perform(patch("/api/leave-requests/" + requestId + "/review")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"approved\": true}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/leave-requests/" + requestId + "/history")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events.length()").value(2))
+                .andExpect(jsonPath("$.events[0].sequenceNumber").value(1))
+                .andExpect(jsonPath("$.events[0].eventType").value("LeaveRequestSubmittedEvent"))
+                .andExpect(jsonPath("$.events[1].eventType").value("LeaveRequestApprovedEvent"))
+                .andExpect(jsonPath("$.events[1].payload.numberOfDays").value(3))
+                .andExpect(jsonPath("$.currentStatus").value("APPROVED"))
+                .andExpect(jsonPath("$.replayedStatus").value("APPROVED"))
+                .andExpect(jsonPath("$.consistent").value(true));
     }
 }

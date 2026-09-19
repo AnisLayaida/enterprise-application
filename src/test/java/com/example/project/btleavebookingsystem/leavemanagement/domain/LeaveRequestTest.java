@@ -2,6 +2,7 @@ package com.example.project.btleavebookingsystem.leavemanagement.domain;
 
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestApprovedEvent;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestCancelledEvent;
+import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestEscalatedToHREvent;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestSubmittedEvent;
 import com.example.project.btleavebookingsystem.shared.exception.InvalidStateTransitionException;
 import org.junit.jupiter.api.Test;
@@ -51,14 +52,17 @@ class LeaveRequestTest {
     }
 
     @Test
-    void managerApprovalWithHrRequiredEscalatesAndRaisesNoOutcomeEventYet() {
+    void managerReviewWithHrRequiredEscalatesAndRaisesEscalationEventRecordingTheRecommendation() {
         LeaveRequest request = LeaveRequest.submit(staffId, fiveDayRange, LeaveType.ANNUAL, "Holiday", true);
         request.pullDomainEvents();
 
         request.reviewByManager(true);
 
         assertThat(request.getStatus()).isEqualTo(RequestStatus.MANAGER_REVIEWED);
-        assertThat(request.pullDomainEvents()).isEmpty();
+        LeaveRequestEscalatedToHREvent event =
+                (LeaveRequestEscalatedToHREvent) request.pullDomainEvents().get(0);
+        assertThat(event.leaveRequestId()).isEqualTo(request.getId());
+        assertThat(event.managerRecommendedApproval()).isTrue();
     }
 
     @Test

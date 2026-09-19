@@ -28,6 +28,7 @@ public class LeaveRequestController {
     private final GetTeamPendingRequestsService getTeamPendingRequestsService;
     private final GetOutstandingRequestsService getOutstandingRequestsService;
     private final GetLeaveRequestByIdService getLeaveRequestByIdService;
+    private final GetLeaveRequestHistoryService getLeaveRequestHistoryService;
 
     public LeaveRequestController(SubmitLeaveRequestService submitLeaveRequestService,
                                   ReviewLeaveRequestService reviewLeaveRequestService,
@@ -36,7 +37,8 @@ public class LeaveRequestController {
                                   GetMyLeaveRequestsService getMyLeaveRequestsService,
                                   GetTeamPendingRequestsService getTeamPendingRequestsService,
                                   GetOutstandingRequestsService getOutstandingRequestsService,
-                                  GetLeaveRequestByIdService getLeaveRequestByIdService) {
+                                  GetLeaveRequestByIdService getLeaveRequestByIdService,
+                                  GetLeaveRequestHistoryService getLeaveRequestHistoryService) {
         this.submitLeaveRequestService = submitLeaveRequestService;
         this.reviewLeaveRequestService = reviewLeaveRequestService;
         this.cancelLeaveRequestService = cancelLeaveRequestService;
@@ -45,6 +47,7 @@ public class LeaveRequestController {
         this.getTeamPendingRequestsService = getTeamPendingRequestsService;
         this.getOutstandingRequestsService = getOutstandingRequestsService;
         this.getLeaveRequestByIdService = getLeaveRequestByIdService;
+        this.getLeaveRequestHistoryService = getLeaveRequestHistoryService;
     }
 
     @PostMapping
@@ -58,6 +61,12 @@ public class LeaveRequestController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<LeaveRequestResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(getLeaveRequestByIdService.getById(id));
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public ResponseEntity<LeaveRequestHistoryResponseDto> getHistory(@PathVariable UUID id) {
+        return ResponseEntity.ok(getLeaveRequestHistoryService.getHistory(id));
     }
 
     @PatchMapping("/{id}/review")

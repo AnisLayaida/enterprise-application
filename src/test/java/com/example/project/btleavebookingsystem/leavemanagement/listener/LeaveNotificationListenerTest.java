@@ -3,6 +3,7 @@ package com.example.project.btleavebookingsystem.leavemanagement.listener;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveType;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestApprovedEvent;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestCancelledEvent;
+import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestEscalatedToHREvent;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestRejectedEvent;
 import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveRequestSubmittedEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,16 @@ class LeaveNotificationListenerTest {
         listener.onSubmitted(new LeaveRequestSubmittedEvent(requestId, staffId));
 
         assertThat(listener.getManagerAlertCount()).isEqualTo(1);
+        assertThat(listener.getHrAlertCount()).isZero();
+        assertThat(listener.getStaffAlertCount()).isZero();
+    }
+
+    @Test
+    void escalatedRequestRaisesAnHrAlertOnly() {
+        listener.onEscalated(new LeaveRequestEscalatedToHREvent(requestId, staffId, true));
+
+        assertThat(listener.getHrAlertCount()).isEqualTo(1);
+        assertThat(listener.getManagerAlertCount()).isZero();
         assertThat(listener.getStaffAlertCount()).isZero();
     }
 
