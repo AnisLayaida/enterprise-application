@@ -89,15 +89,21 @@ public class LeaveRequest {
     public void cancel() {
         boolean wasApproved = this.status == RequestStatus.APPROVED;
         transitionTo(RequestStatus.CANCELLED);
-        domainEvents.add(new LeaveRequestCancelledEvent(id, staffId, wasApproved, dateRange.workingDays()));
+        domainEvents.add(new LeaveRequestCancelledEvent(
+                id, staffId, wasApproved, leaveType, businessYear(), dateRange.workingDays()));
     }
 
     private void raiseOutcomeEvent(boolean approved) {
         if (approved) {
-            domainEvents.add(new LeaveRequestApprovedEvent(id, staffId, dateRange.workingDays()));
+            domainEvents.add(new LeaveRequestApprovedEvent(
+                    id, staffId, leaveType, businessYear(), dateRange.workingDays()));
         } else {
             domainEvents.add(new LeaveRequestRejectedEvent(id, staffId));
         }
+    }
+
+    private int businessYear() {
+        return dateRange.getStartDate().getYear();
     }
 
     private void transitionTo(RequestStatus next) {

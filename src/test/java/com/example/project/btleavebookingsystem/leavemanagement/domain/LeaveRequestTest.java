@@ -107,4 +107,33 @@ class LeaveRequestTest {
         assertThatThrownBy(request::cancel)
                 .isInstanceOf(InvalidStateTransitionException.class);
     }
+
+    @Test
+    void approvedEventCarriesTheLeaveTypeAndBusinessYearOfTheLeave() {
+        LeaveRequest request = LeaveRequest.submit(staffId, fiveDayRange, LeaveType.SICK, "Unwell", false);
+        request.pullDomainEvents();
+
+        request.reviewByManager(true);
+
+        LeaveRequestApprovedEvent event = (LeaveRequestApprovedEvent) request.pullDomainEvents().get(0);
+        assertThat(event.leaveType()).isEqualTo(LeaveType.SICK);
+        assertThat(event.businessYear()).isEqualTo(2026);
+        assertThat(event.numberOfDays()).isEqualTo(5);
+    }
+
+    @Test
+    void businessYearComesFromTheLeaveStartDateNotTheCurrentYear() {
+        DateRange nextYearRange = new DateRange(LocalDate.of(2027, 1, 4), LocalDate.of(2027, 1, 8));
+        LeaveRequest request = LeaveRequest.submit(staffId, nextYearRange, LeaveType.ANNUAL, "New Year trip", false);
+        request.pullDomainEvents();
+
+        request.reviewByManager(true);
+        LeaveRequestApprovedEvent approved = (LeaveRequestApprovedEvent) request.pullDomainEvents().get(0);
+
+        request.cancel();
+        LeaveRequestCancelledEvent cancelled = (LeaveRequestCancelledEvent) request.pullDomainEvents().get(0);
+
+        assertThat(approved.businessYear()).isEqualTo(2027);
+        assertThat(cancelled.businessYear()).isEqualTo(2027);
+    }
 }
