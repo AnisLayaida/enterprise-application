@@ -1,5 +1,7 @@
 package com.example.project.btleavebookingsystem.leavemanagement.service.query;
 
+import com.example.project.btleavebookingsystem.leavemanagement.access.ActingUser;
+import com.example.project.btleavebookingsystem.leavemanagement.access.LeaveAccessPolicy;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveRequest;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.RequestStatus;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveRequestHistoryResponseDto;
@@ -24,17 +26,22 @@ public class GetLeaveRequestHistoryService {
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final LeaveEventRecordRepository eventRecordRepository;
+    private final LeaveAccessPolicy accessPolicy;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public GetLeaveRequestHistoryService(LeaveRequestRepository leaveRequestRepository,
-                                         LeaveEventRecordRepository eventRecordRepository) {
+                                         LeaveEventRecordRepository eventRecordRepository,
+                                         LeaveAccessPolicy accessPolicy) {
         this.leaveRequestRepository = leaveRequestRepository;
         this.eventRecordRepository = eventRecordRepository;
+        this.accessPolicy = accessPolicy;
     }
 
-    public LeaveRequestHistoryResponseDto getHistory(UUID leaveRequestId) {
+    public LeaveRequestHistoryResponseDto getHistory(UUID leaveRequestId, ActingUser viewer) {
         LeaveRequest request = leaveRequestRepository.findById(leaveRequestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found: " + leaveRequestId));
+
+        accessPolicy.assertCanView(viewer, request.getStaffId());
 
         List<LeaveEventRecord> stream =
                 eventRecordRepository.findByAggregateIdOrderBySequenceNumberAsc(leaveRequestId);

@@ -6,7 +6,7 @@ import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveAllowan
 import com.example.project.btleavebookingsystem.leavemanagement.repository.LeaveAllowanceRepository;
 import com.example.project.btleavebookingsystem.shared.exception.LeaveAllowanceAlreadyExistsException;
 import com.example.project.btleavebookingsystem.shared.exception.ResourceNotFoundException;
-import com.example.project.btleavebookingsystem.staffmanagement.repository.StaffMemberRepository;
+import com.example.project.btleavebookingsystem.staffmanagement.api.StaffDirectory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,18 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateLeaveAllowanceService {
 
     private final LeaveAllowanceRepository leaveAllowanceRepository;
-    private final StaffMemberRepository staffMemberRepository;
+    private final StaffDirectory staffDirectory;
 
     public CreateLeaveAllowanceService(LeaveAllowanceRepository leaveAllowanceRepository,
-                                       StaffMemberRepository staffMemberRepository) {
+                                       StaffDirectory staffDirectory) {
         this.leaveAllowanceRepository = leaveAllowanceRepository;
-        this.staffMemberRepository = staffMemberRepository;
+        this.staffDirectory = staffDirectory;
     }
 
     @Transactional
     public LeaveAllowanceResponseDto create(CreateLeaveAllowanceDto dto) {
-        staffMemberRepository.findById(dto.staffId())
-                .orElseThrow(() -> new ResourceNotFoundException("Staff member not found: " + dto.staffId()));
+        if (!staffDirectory.exists(dto.staffId())) {
+            throw new ResourceNotFoundException("Staff member not found: " + dto.staffId());
+        }
 
         leaveAllowanceRepository.findByStaffIdAndBusinessYear(dto.staffId(), dto.businessYear())
                 .ifPresent(existing -> {

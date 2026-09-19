@@ -24,6 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class LeaveRequestControllerIntegrationTest {
 
+    private static final String PASSWORD = "TestPass123!";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -44,7 +46,9 @@ class LeaveRequestControllerIntegrationTest {
         return json.get("token").asText();
     }
 
-    private String createStaffAndReturnToken(String adminToken, String username) throws Exception {
+    /** Creates a staff member (with login) and returns their staff id. */
+    private String createStaff(String adminToken, String username, String role, String lineManagerId) throws Exception {
+        String lineManagerJson = lineManagerId == null ? "null" : "\"" + lineManagerId + "\"";
         String createStaffBody = """
                 {
                   "firstName": "Integration",
@@ -52,22 +56,49 @@ class LeaveRequestControllerIntegrationTest {
                   "email": "%s@bt.com",
                   "hireDate": "2023-04-01",
                   "department": "QA",
-                  "lineManagerId": null,
+                  "lineManagerId": %s,
                   "jobLevel": "Engineer",
                   "employmentStatus": "ACTIVE",
                   "username": "%s",
-                  "password": "TestPass123!",
-                  "role": "STAFF"
+                  "password": "%s",
+                  "role": "%s"
                 }
-                """.formatted(username, username);
+                """.formatted(username, lineManagerJson, username, PASSWORD, role);
 
-        mockMvc.perform(post("/api/staff")
+        MvcResult result = mockMvc.perform(post("/api/staff")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createStaffBody))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
 
-        return loginAndGetToken(username, "TestPass123!");
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+    }
+
+    private String createStaffAndReturnToken(String adminToken, String username) throws Exception {
+        createStaff(adminToken, username, "STAFF", null);
+        return loginAndGetToken(username, PASSWORD);
+    }
+
+    private String submitLeave(String staffToken, String startDate, String endDate) throws Exception {
+        String submitBody = """
+                {
+                  "leaveType": "ANNUAL",
+                  "startDate": "%s",
+                  "endDate": "%s",
+                  "reason": "Ownership test",
+                  "requiresHRApproval": false
+                }
+                """.formatted(startDate, endDate);
+
+        MvcResult result = mockMvc.perform(post("/api/leave-requests")
+                        .header("Authorization", "Bearer " + staffToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submitBody))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
     }
 
     @Test
@@ -127,25 +158,7 @@ class LeaveRequestControllerIntegrationTest {
         String adminToken = loginAndGetToken("admin", "AdminPass123!");
         String staffToken = createStaffAndReturnToken(adminToken, "getbyid.tester." + UUID.randomUUID());
 
-        String submitBody = """
-                {
-                  "leaveType": "ANNUAL",
-                  "startDate": "2026-12-01",
-                  "endDate": "2026-12-03",
-                  "reason": "GetById test",
-                  "requiresHRApproval": false
-                }
-                """;
-
-        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
-                        .header("Authorization", "Bearer " + staffToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(submitBody))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
-                .get("id").asText();
+        String requestId = submitLeave(staffToken, "2026-12-01", "2026-12-03");
 
         mockMvc.perform(get("/api/leave-requests/" + requestId)
                         .header("Authorization", "Bearer " + adminToken))
@@ -159,25 +172,7 @@ class LeaveRequestControllerIntegrationTest {
         String adminToken = loginAndGetToken("admin", "AdminPass123!");
         String staffTokenA = createStaffAndReturnToken(adminToken, "staffa." + UUID.randomUUID());
 
-        String submitBody = """
-                {
-                  "leaveType": "ANNUAL",
-                  "startDate": "2026-12-10",
-                  "endDate": "2026-12-11",
-                  "reason": "Restricted lookup test",
-                  "requiresHRApproval": false
-                }
-                """;
-
-        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
-                        .header("Authorization", "Bearer " + staffTokenA)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(submitBody))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
-                .get("id").asText();
+        String requestId = submitLeave(staffTokenA, "2026-12-10", "2026-12-11");
 
         mockMvc.perform(get("/api/leave-requests/" + requestId)
                         .header("Authorization", "Bearer " + staffTokenA))
@@ -189,25 +184,7 @@ class LeaveRequestControllerIntegrationTest {
         String adminToken = loginAndGetToken("admin", "AdminPass123!");
         String staffToken = createStaffAndReturnToken(adminToken, "history.tester." + UUID.randomUUID());
 
-        String submitBody = """
-                {
-                  "leaveType": "ANNUAL",
-                  "startDate": "2026-12-14",
-                  "endDate": "2026-12-16",
-                  "reason": "Event store test",
-                  "requiresHRApproval": false
-                }
-                """;
-
-        MvcResult submitResult = mockMvc.perform(post("/api/leave-requests")
-                        .header("Authorization", "Bearer " + staffToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(submitBody))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String requestId = objectMapper.readTree(submitResult.getResponse().getContentAsString())
-                .get("id").asText();
+        String requestId = submitLeave(staffToken, "2026-12-14", "2026-12-16");
 
         mockMvc.perform(patch("/api/leave-requests/" + requestId + "/review")
                         .header("Authorization", "Bearer " + adminToken)
@@ -226,5 +203,53 @@ class LeaveRequestControllerIntegrationTest {
                 .andExpect(jsonPath("$.currentStatus").value("APPROVED"))
                 .andExpect(jsonPath("$.replayedStatus").value("APPROVED"))
                 .andExpect(jsonPath("$.consistent").value(true));
+    }
+
+    @Test
+    void staffCannotCancelAnotherStaffMembersLeaveRequest() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String ownerToken = createStaffAndReturnToken(adminToken, "owner." + UUID.randomUUID());
+        String intruderToken = createStaffAndReturnToken(adminToken, "intruder." + UUID.randomUUID());
+
+        String requestId = submitLeave(ownerToken, "2026-11-09", "2026-11-10");
+
+        mockMvc.perform(patch("/api/leave-requests/" + requestId + "/cancel")
+                        .header("Authorization", "Bearer " + intruderToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("You do not have permission to perform this action"));
+    }
+
+    @Test
+    void lineManagerCanReviewTheirDirectReportsLeaveRequest() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String managerUsername = "linemanager." + UUID.randomUUID();
+        String managerId = createStaff(adminToken, managerUsername, "MANAGER", null);
+        String reportUsername = "report." + UUID.randomUUID();
+        createStaff(adminToken, reportUsername, "STAFF", managerId);
+
+        String requestId = submitLeave(loginAndGetToken(reportUsername, PASSWORD), "2026-11-16", "2026-11-17");
+
+        mockMvc.perform(patch("/api/leave-requests/" + requestId + "/review")
+                        .header("Authorization", "Bearer " + loginAndGetToken(managerUsername, PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"approved\": true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+    }
+
+    @Test
+    void managerCannotReviewALeaveRequestFromOutsideTheirTeam() throws Exception {
+        String adminToken = loginAndGetToken("admin", "AdminPass123!");
+        String managerUsername = "othermanager." + UUID.randomUUID();
+        createStaff(adminToken, managerUsername, "MANAGER", null);
+        String staffToken = createStaffAndReturnToken(adminToken, "unmanaged." + UUID.randomUUID());
+
+        String requestId = submitLeave(staffToken, "2026-11-23", "2026-11-24");
+
+        mockMvc.perform(patch("/api/leave-requests/" + requestId + "/review")
+                        .header("Authorization", "Bearer " + loginAndGetToken(managerUsername, PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"approved\": true}"))
+                .andExpect(status().isForbidden());
     }
 }

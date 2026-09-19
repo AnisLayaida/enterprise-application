@@ -5,8 +5,7 @@ import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveRequ
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveType;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveRequestResponseDto;
 import com.example.project.btleavebookingsystem.leavemanagement.repository.LeaveRequestRepository;
-import com.example.project.btleavebookingsystem.staffmanagement.domain.StaffMember;
-import com.example.project.btleavebookingsystem.staffmanagement.repository.StaffMemberRepository;
+import com.example.project.btleavebookingsystem.staffmanagement.api.StaffDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +27,7 @@ class GetTeamPendingRequestsServiceTest {
     private LeaveRequestRepository leaveRequestRepository;
 
     @Mock
-    private StaffMemberRepository staffMemberRepository;
+    private StaffDirectory staffDirectory;
 
     private GetTeamPendingRequestsService service;
 
@@ -38,18 +37,12 @@ class GetTeamPendingRequestsServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new GetTeamPendingRequestsService(leaveRequestRepository, staffMemberRepository);
-    }
-
-    private StaffMember teamMember() {
-        return new StaffMember(teamMemberId, "Jane", "Doe", "jane.doe@bt.com",
-                LocalDate.of(2023, 4, 1), "Fabric Solutions Architecture", managerId,
-                "Engineer", StaffMember.EmploymentStatus.ACTIVE);
+        service = new GetTeamPendingRequestsService(leaveRequestRepository, staffDirectory);
     }
 
     @Test
     void onlyReturnsRequestsFromStaffReportingToThisManager() {
-        when(staffMemberRepository.findByLineManagerId(managerId)).thenReturn(List.of(teamMember()));
+        when(staffDirectory.findDirectReportIds(managerId)).thenReturn(List.of(teamMemberId));
 
         DateRange range = new DateRange(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 10));
         LeaveRequest teamRequest = LeaveRequest.submit(teamMemberId, range, LeaveType.ANNUAL, "Holiday", false);
@@ -66,7 +59,7 @@ class GetTeamPendingRequestsServiceTest {
 
     @Test
     void filtersOutRequestsStartingBeforeTheGivenFromDate() {
-        when(staffMemberRepository.findByLineManagerId(managerId)).thenReturn(List.of(teamMember()));
+        when(staffDirectory.findDirectReportIds(managerId)).thenReturn(List.of(teamMemberId));
 
         DateRange earlyRange = new DateRange(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 5));
         LeaveRequest earlyRequest = LeaveRequest.submit(teamMemberId, earlyRange, LeaveType.ANNUAL, "Early trip", false);
@@ -80,7 +73,7 @@ class GetTeamPendingRequestsServiceTest {
 
     @Test
     void returnsEmptyListWhenManagerHasNoTeamMembers() {
-        when(staffMemberRepository.findByLineManagerId(managerId)).thenReturn(List.of());
+        when(staffDirectory.findDirectReportIds(managerId)).thenReturn(List.of());
         when(leaveRequestRepository.findByStatusIn(any())).thenReturn(List.of());
 
         List<LeaveRequestResponseDto> result = service.getForManager(managerId, null, null);

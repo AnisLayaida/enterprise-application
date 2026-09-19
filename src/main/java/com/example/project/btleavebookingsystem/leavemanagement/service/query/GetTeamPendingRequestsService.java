@@ -3,7 +3,7 @@ package com.example.project.btleavebookingsystem.leavemanagement.service.query;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.RequestStatus;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveRequestResponseDto;
 import com.example.project.btleavebookingsystem.leavemanagement.repository.LeaveRequestRepository;
-import com.example.project.btleavebookingsystem.staffmanagement.repository.StaffMemberRepository;
+import com.example.project.btleavebookingsystem.staffmanagement.api.StaffDirectory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,18 +14,16 @@ import java.util.UUID;
 public class GetTeamPendingRequestsService {
 
     private final LeaveRequestRepository leaveRequestRepository;
-    private final StaffMemberRepository staffMemberRepository;
+    private final StaffDirectory staffDirectory;
 
     public GetTeamPendingRequestsService(LeaveRequestRepository leaveRequestRepository,
-                                         StaffMemberRepository staffMemberRepository) {
+                                         StaffDirectory staffDirectory) {
         this.leaveRequestRepository = leaveRequestRepository;
-        this.staffMemberRepository = staffMemberRepository;
+        this.staffDirectory = staffDirectory;
     }
 
     public List<LeaveRequestResponseDto> getForManager(UUID managerId, LocalDate from, LocalDate to) {
-        List<UUID> teamStaffIds = staffMemberRepository.findByLineManagerId(managerId).stream()
-                .map(s -> s.getId())
-                .toList();
+        List<UUID> teamStaffIds = staffDirectory.findDirectReportIds(managerId);
 
         List<RequestStatus> pendingStatuses = List.of(
                 RequestStatus.PENDING, RequestStatus.MANAGER_REVIEWED, RequestStatus.HR_REVIEW);

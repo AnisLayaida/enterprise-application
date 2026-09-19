@@ -1,6 +1,7 @@
 package com.example.project.btleavebookingsystem.leavemanagement.controller;
 
 import com.example.project.btleavebookingsystem.identityaccess.security.AuthenticatedUser;
+import com.example.project.btleavebookingsystem.leavemanagement.access.ActingUser;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.*;
 import com.example.project.btleavebookingsystem.leavemanagement.service.command.*;
 import com.example.project.btleavebookingsystem.leavemanagement.service.query.*;
@@ -59,33 +60,40 @@ public class LeaveRequestController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<LeaveRequestResponseDto> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(getLeaveRequestByIdService.getById(id));
+    public ResponseEntity<LeaveRequestResponseDto> getById(@PathVariable UUID id,
+                                                           Authentication authentication) {
+        return ResponseEntity.ok(getLeaveRequestByIdService.getById(id, ActingUser.from(authentication)));
     }
 
     @GetMapping("/{id}/history")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<LeaveRequestHistoryResponseDto> getHistory(@PathVariable UUID id) {
-        return ResponseEntity.ok(getLeaveRequestHistoryService.getHistory(id));
+    public ResponseEntity<LeaveRequestHistoryResponseDto> getHistory(@PathVariable UUID id,
+                                                                     Authentication authentication) {
+        return ResponseEntity.ok(getLeaveRequestHistoryService.getHistory(id, ActingUser.from(authentication)));
     }
 
     @PatchMapping("/{id}/review")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<LeaveRequestResponseDto> review(@PathVariable UUID id,
-                                                          @Valid @RequestBody ReviewLeaveRequestDto dto) {
-        return ResponseEntity.ok(reviewLeaveRequestService.review(id, dto.approved()));
+                                                          @Valid @RequestBody ReviewLeaveRequestDto dto,
+                                                          Authentication authentication) {
+        return ResponseEntity.ok(reviewLeaveRequestService.review(
+                id, dto.approved(), ActingUser.from(authentication)));
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<LeaveRequestResponseDto> cancel(@PathVariable UUID id) {
-        return ResponseEntity.ok(cancelLeaveRequestService.cancel(id));
+    public ResponseEntity<LeaveRequestResponseDto> cancel(@PathVariable UUID id,
+                                                          Authentication authentication) {
+        return ResponseEntity.ok(cancelLeaveRequestService.cancel(id, ActingUser.from(authentication)));
     }
 
     @PatchMapping("/{id}/hr-review")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LeaveRequestResponseDto> resolveHRReview(@PathVariable UUID id,
-                                                                   @Valid @RequestBody ReviewLeaveRequestDto dto) {
-        return ResponseEntity.ok(resolveHRReviewService.resolve(id, dto.approved()));
+                                                                   @Valid @RequestBody ReviewLeaveRequestDto dto,
+                                                                   Authentication authentication) {
+        return ResponseEntity.ok(resolveHRReviewService.resolve(
+                id, dto.approved(), ActingUser.from(authentication)));
     }
 
     @GetMapping("/mine")

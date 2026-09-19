@@ -1,5 +1,7 @@
 package com.example.project.btleavebookingsystem.leavemanagement.service.query;
 
+import com.example.project.btleavebookingsystem.leavemanagement.access.ActingUser;
+import com.example.project.btleavebookingsystem.leavemanagement.access.LeaveAccessPolicy;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.DateRange;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveRequest;
 import com.example.project.btleavebookingsystem.leavemanagement.domain.LeaveType;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.when;
 class GetLeaveRequestHistoryServiceTest {
 
     private final UUID staffId = UUID.randomUUID();
+    private final ActingUser admin = new ActingUser(UUID.randomUUID(), true);
     private final DateRange range = new DateRange(LocalDate.of(2026, 10, 5), LocalDate.of(2026, 10, 9));
 
     private LeaveRequestRepository leaveRequestRepository;
@@ -35,7 +38,8 @@ class GetLeaveRequestHistoryServiceTest {
     void setUp() {
         leaveRequestRepository = mock(LeaveRequestRepository.class);
         eventRecordRepository = mock(LeaveEventRecordRepository.class);
-        service = new GetLeaveRequestHistoryService(leaveRequestRepository, eventRecordRepository);
+        LeaveAccessPolicy accessPolicy = mock(LeaveAccessPolicy.class);
+        service = new GetLeaveRequestHistoryService(leaveRequestRepository, eventRecordRepository, accessPolicy);
     }
 
     @Test
@@ -46,7 +50,7 @@ class GetLeaveRequestHistoryServiceTest {
                 new LeaveEventRecord(request.getId(), 1, "LeaveRequestSubmittedEvent", staffId, "{}"),
                 new LeaveEventRecord(request.getId(), 2, "LeaveRequestApprovedEvent", staffId, "{\"numberOfDays\":5}")));
 
-        LeaveRequestHistoryResponseDto history = service.getHistory(request.getId());
+        LeaveRequestHistoryResponseDto history = service.getHistory(request.getId(), admin);
 
         assertThat(history.currentStatus()).isEqualTo(RequestStatus.APPROVED);
         assertThat(history.replayedStatus()).isEqualTo(RequestStatus.APPROVED);
@@ -62,7 +66,7 @@ class GetLeaveRequestHistoryServiceTest {
         when(eventRecordRepository.findByAggregateIdOrderBySequenceNumberAsc(request.getId())).thenReturn(List.of(
                 new LeaveEventRecord(request.getId(), 1, "LeaveRequestSubmittedEvent", staffId, "{}")));
 
-        LeaveRequestHistoryResponseDto history = service.getHistory(request.getId());
+        LeaveRequestHistoryResponseDto history = service.getHistory(request.getId(), admin);
 
         assertThat(history.replayedStatus()).isEqualTo(RequestStatus.PENDING);
         assertThat(history.consistent()).isFalse();
@@ -73,7 +77,7 @@ class GetLeaveRequestHistoryServiceTest {
         UUID missing = UUID.randomUUID();
         when(leaveRequestRepository.findById(missing)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.getHistory(missing))
+        assertThatThrownBy(() -> service.getHistory(missing, admin))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 

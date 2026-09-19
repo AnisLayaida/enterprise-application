@@ -1,6 +1,7 @@
 package com.example.project.btleavebookingsystem.leavemanagement.controller;
 
 import com.example.project.btleavebookingsystem.identityaccess.security.AuthenticatedUser;
+import com.example.project.btleavebookingsystem.leavemanagement.access.ActingUser;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.AmendLeaveAllowanceDto;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.CreateLeaveAllowanceDto;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveAllowanceResponseDto;
@@ -40,8 +41,9 @@ public class LeaveAllowanceController {
 
     @GetMapping("/{staffId}")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<LeaveAllowanceResponseDto> getForStaff(@PathVariable UUID staffId) {
-        return ResponseEntity.ok(getMyLeaveBalanceService.getForStaff(staffId));
+    public ResponseEntity<LeaveAllowanceResponseDto> getForStaff(@PathVariable UUID staffId,
+                                                                 Authentication authentication) {
+        return ResponseEntity.ok(getMyLeaveBalanceService.getForStaff(staffId, ActingUser.from(authentication)));
     }
 
     @PostMapping
