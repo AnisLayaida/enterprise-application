@@ -2,6 +2,8 @@ package com.example.project.btleavebookingsystem.identityaccess.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -23,6 +25,8 @@ import java.util.Map;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitingFilter rateLimitingFilter;
@@ -51,9 +55,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, authException) ->
-                                writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED,
-                                        "Unauthorized", "Authentication is required to access this resource"))
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.warn("Unauthorized access attempt: {} {} from {}",
+                                    request.getMethod(), request.getRequestURI(), request.getRemoteAddr());
+                            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                                    "Unauthorized", "Authentication is required to access this resource");
+                        })
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class);

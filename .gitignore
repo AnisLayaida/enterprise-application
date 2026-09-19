@@ -31,4 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
-/src/main/resources/application.properties
+
+### macOS ###
+.DS_Store
+
+### Secrets (never commit) ###
+# Local credentials: JWT signing key and RabbitMQ credentials.
+# application.properties is intentionally committed and contains no secrets.
+# See secrets.example.properties for the required keys.
+secrets.properties
+
+### Local H2 file-based database (if the 'local' profile is used) ###
+data/

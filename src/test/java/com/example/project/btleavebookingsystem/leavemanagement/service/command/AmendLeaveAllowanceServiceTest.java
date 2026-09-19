@@ -45,13 +45,13 @@ class AmendLeaveAllowanceServiceTest {
     @Test
     void amendIncreasesEntitlementWhilePreservingDaysAlreadyUsed() {
         LeaveAllowance allowance = new LeaveAllowance(staffId, Year.now().getValue(), 25);
-        allowance.deduct(10); // 10 used, 15 remaining
+        allowance.deduct(10);
         when(leaveAllowanceRepository.findByStaffIdAndBusinessYear(staffId, Year.now().getValue()))
                 .thenReturn(Optional.of(allowance));
 
         LeaveAllowanceResponseDto response = service.amend(staffId, 30);
 
         assertThat(response.entitledDays()).isEqualTo(30);
-        assertThat(response.remainingDays()).isEqualTo(20); // 30 - 10 used
+        assertThat(response.remainingDays()).isEqualTo(20);
     }
 }
