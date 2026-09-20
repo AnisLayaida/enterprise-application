@@ -1,10 +1,7 @@
-HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
-### STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -12,14 +9,10 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
 .idea
 *.iws
 *.iml
 *.ipr
-
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -28,18 +21,7 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### VS Code ###
 .vscode/
-
-### macOS ###
 .DS_Store
-
-### Secrets (never commit) ###
-# Local credentials: JWT signing key and RabbitMQ credentials.
-# application.properties is intentionally committed and contains no secrets.
-# See secrets.example.properties for the required keys.
 secrets.properties
-
-### Local H2 file-based database (if the 'local' profile is used) ###
 data/.DS_Store
