@@ -6,12 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * Object-level authorisation for Leave Management (OWASP API1:2023 Broken Object Level Authorisation).
- * Role checks (@PreAuthorize) decide WHAT kind of user may call an endpoint; this policy decides
- * WHOSE leave they may act on, based on ownership and the line-management relationship.
- * Denials raise AccessDeniedException, which the global handler logs and maps to 403.
- */
 @Component
 public class LeaveAccessPolicy {
 
@@ -39,7 +33,6 @@ public class LeaveAccessPolicy {
                 "Only the requester's line manager or an administrator can review this leave request");
     }
 
-    /** HR resolution is an administrator responsibility, and never for the resolver's own request. */
     public void assertCanResolveHR(ActingUser actor, UUID requestOwnerId) {
         rejectSelfApproval(actor, requestOwnerId);
         if (actor.admin()) {
@@ -48,7 +41,6 @@ public class LeaveAccessPolicy {
         throw new AccessDeniedException("Only HR (administrators) can resolve an escalated leave request");
     }
 
-    /** Leave data is visible to the staff member, their line manager and administrators. */
     public void assertCanView(ActingUser actor, UUID subjectStaffId) {
         if (actor.admin() || actor.staffId().equals(subjectStaffId) || isLineManagerOf(actor, subjectStaffId)) {
             return;

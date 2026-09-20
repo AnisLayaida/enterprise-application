@@ -11,6 +11,11 @@ public record SubmitLeaveRequestDto(
         @NotNull LocalDate startDate,
         @NotNull LocalDate endDate,
         @Size(max = 500) String reason,
-        boolean requiresHRApproval
+        Boolean requiresHRApproval
 ) {
+    public SubmitLeaveRequestDto {
+        if (requiresHRApproval == null) {
+            requiresHRApproval = Boolean.FALSE;
+        }
+    }
 }

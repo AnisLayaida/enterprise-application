@@ -22,7 +22,6 @@ public class GetMyLeaveBalanceService {
         this.accessPolicy = accessPolicy;
     }
 
-    /** The caller's own balance (identity comes from the verified token, so no further check). */
     public LeaveAllowanceResponseDto getForStaff(UUID staffId) {
         int currentYear = Year.now().getValue();
         return leaveAllowanceRepository.findByStaffIdAndBusinessYear(staffId, currentYear)
@@ -31,7 +30,6 @@ public class GetMyLeaveBalanceService {
                         "No leave allowance found for staff " + staffId + " in " + currentYear));
     }
 
-    /** Another staff member's balance, visible only to their line manager or an administrator. */
     public LeaveAllowanceResponseDto getForStaff(UUID staffId, ActingUser viewer) {
         accessPolicy.assertCanView(viewer, staffId);
         return getForStaff(staffId);

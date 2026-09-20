@@ -5,8 +5,10 @@ import com.example.project.btleavebookingsystem.leavemanagement.access.ActingUse
 import com.example.project.btleavebookingsystem.leavemanagement.dto.AmendLeaveAllowanceDto;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.CreateLeaveAllowanceDto;
 import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveAllowanceResponseDto;
+import com.example.project.btleavebookingsystem.leavemanagement.dto.LeaveUsageReportDto;
 import com.example.project.btleavebookingsystem.leavemanagement.service.command.AmendLeaveAllowanceService;
 import com.example.project.btleavebookingsystem.leavemanagement.service.command.CreateLeaveAllowanceService;
+import com.example.project.btleavebookingsystem.leavemanagement.service.query.GetLeaveUsageReportService;
 import com.example.project.btleavebookingsystem.leavemanagement.service.query.GetMyLeaveBalanceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,13 +26,28 @@ public class LeaveAllowanceController {
     private final GetMyLeaveBalanceService getMyLeaveBalanceService;
     private final AmendLeaveAllowanceService amendLeaveAllowanceService;
     private final CreateLeaveAllowanceService createLeaveAllowanceService;
+    private final GetLeaveUsageReportService getLeaveUsageReportService;
 
     public LeaveAllowanceController(GetMyLeaveBalanceService getMyLeaveBalanceService,
                                     AmendLeaveAllowanceService amendLeaveAllowanceService,
-                                    CreateLeaveAllowanceService createLeaveAllowanceService) {
+                                    CreateLeaveAllowanceService createLeaveAllowanceService,
+                                    GetLeaveUsageReportService getLeaveUsageReportService) {
         this.getMyLeaveBalanceService = getMyLeaveBalanceService;
         this.amendLeaveAllowanceService = amendLeaveAllowanceService;
         this.createLeaveAllowanceService = createLeaveAllowanceService;
+        this.getLeaveUsageReportService = getLeaveUsageReportService;
+    }
+
+    /**
+     * Administrator usage report: company-wide by default, optionally for one business year
+     * and/or one manager's team.
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<LeaveUsageReportDto> getUsageReport(
+            @RequestParam(required = false) Integer businessYear,
+            @RequestParam(required = false) UUID managerId) {
+        return ResponseEntity.ok(getLeaveUsageReportService.getReport(businessYear, managerId));
     }
 
     @GetMapping("/mine")

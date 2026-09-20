@@ -35,6 +35,13 @@ public class User {
         this.role = role;
     }
 
+    public void changeRole(Role newRole) {
+        if (newRole == null) {
+            throw new IllegalArgumentException("A role is required");
+        }
+        this.role = newRole;
+    }
+
     public UUID getId() { return id; }
     public UUID getStaffId() { return staffId; }
     public String getUsername() { return username; }

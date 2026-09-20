@@ -10,11 +10,6 @@ import com.example.project.btleavebookingsystem.leavemanagement.event.LeaveReque
 import java.util.List;
 import java.util.Map;
 
-/**
- * Derives a leave request's status purely by replaying its event stream in order
- * (state as a left fold over events). Used to verify that the event store and the
- * state table agree.
- */
 public final class LeaveRequestStatusProjection {
 
     private static final Map<String, RequestStatus> STATUS_AFTER_EVENT = Map.of(
@@ -28,9 +23,6 @@ public final class LeaveRequestStatusProjection {
     private LeaveRequestStatusProjection() {
     }
 
-    /**
-     * @return the status after applying every event in order, or null for an empty stream
-     */
     public static RequestStatus project(List<String> eventTypesInOrder) {
         RequestStatus status = null;
         for (String eventType : eventTypesInOrder) {

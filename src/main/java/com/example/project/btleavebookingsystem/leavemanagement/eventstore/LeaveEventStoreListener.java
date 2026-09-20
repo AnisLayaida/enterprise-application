@@ -7,11 +7,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Appends every Leave Management domain event to its leave request's stream.
- * Runs synchronously inside the publishing transaction, so the state change and its
- * event record are committed (or rolled back) together and can never diverge.
- */
 @Component
 public class LeaveEventStoreListener {
 
