@@ -9,11 +9,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Administrator view of outstanding (not yet finally resolved) leave requests.
- * Optional filters, combined with AND: a single staff member, and/or a manager's direct reports.
- * With no filters the view is company-wide.
- */
 @Service
 public class GetOutstandingRequestsService {
 

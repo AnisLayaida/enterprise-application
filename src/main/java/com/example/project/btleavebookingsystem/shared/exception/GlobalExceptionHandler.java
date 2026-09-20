@@ -21,12 +21,6 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Centralised translation of exceptions into one consistent JSON error contract
- * {timestamp, status, error, message}. Domain and security exceptions map to precise status codes;
- * framework errors keep their real status; anything unexpected is logged in full server-side
- * and returned as a generic 500 so no internals leak to the client.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -101,11 +95,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + ex.getName() + "'");
     }
 
-    /**
-     * Safety net. Spring MVC's own exceptions (unknown route, unsupported method, etc.) keep their
-     * real status; anything else is an unexpected fault - logged with its stack trace, returned as a
-     * generic 500 without internal detail.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex, HttpServletRequest request) {
         if (ex instanceof ErrorResponse errorResponse) {

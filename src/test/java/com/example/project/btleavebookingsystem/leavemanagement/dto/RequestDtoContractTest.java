@@ -17,17 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Contract tests for request DTOs at the seam between JSON parsing and bean validation.
- *
- * <p>Regression for a defect found by the Postman test "Submit Leave Request - Missing Required Fields":
- * with Jackson 3's FAIL_ON_NULL_FOR_PRIMITIVES enabled, an absent primitive field failed deserialisation,
- * so bean validation never ran and the client received a generic 400 "Malformed request body"
- * instead of a field-level 422.</p>
- */
 class RequestDtoContractTest {
 
-    /** Pins the Jackson 3 behaviour that exposed the defect, so these contracts hold whatever the defaults. */
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
             .build();

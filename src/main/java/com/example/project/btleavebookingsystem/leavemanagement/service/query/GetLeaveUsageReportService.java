@@ -10,10 +10,6 @@ import java.time.Year;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Read-side report of annual leave usage across the organisation or one manager's team.
- * Pure query: no aggregate is modified.
- */
 @Service
 public class GetLeaveUsageReportService {
 
@@ -52,7 +48,6 @@ public class GetLeaveUsageReportService {
                 allowance.getRemainingDays());
     }
 
-    /** Percentage of entitlement used, to one decimal place; zero when there is no entitlement. */
     private static double utilisation(long used, long entitled) {
         if (entitled == 0) {
             return 0.0;

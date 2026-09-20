@@ -13,17 +13,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Raises the alerts required by the brief:
- *  - manager alert when a leave request is submitted and is pending review
- *  - HR alert when a manager escalates a request that requires HR approval
- *  - staff alert when their request is approved, rejected or cancelled
- *
- * Alerts fire only after the originating transaction commits, so no one is notified
- * about a change that was rolled back. In this prototype the delivery channel is a
- * structured ALERT log entry; in production this listener would hand off to an
- * email/Teams service or publish to a notifications queue.
- */
 @Component
 public class LeaveNotificationListener {
 

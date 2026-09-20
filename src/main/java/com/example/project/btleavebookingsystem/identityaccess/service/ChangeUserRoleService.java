@@ -14,11 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-/**
- * Changes a user's system role. This is a privilege change, so it is restricted to administrators
- * (at the endpoint), forbidden on one's own account, and always written to the audit log.
- * Note: previously issued JWTs carry the old role until they expire; the new role applies from next login.
- */
 @Service
 public class ChangeUserRoleService {
 

@@ -46,7 +46,6 @@ class LeaveRequestControllerIntegrationTest {
         return json.get("token").asText();
     }
 
-    /** Creates a staff member (with login) and returns their staff id. */
     private String createStaff(String adminToken, String username, String role, String lineManagerId) throws Exception {
         String lineManagerJson = lineManagerId == null ? "null" : "\"" + lineManagerId + "\"";
         String createStaffBody = """

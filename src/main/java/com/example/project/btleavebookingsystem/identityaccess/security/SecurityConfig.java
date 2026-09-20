@@ -46,12 +46,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    /**
-     * Authentication is exclusively JWT-based via POST /api/auth/login (AuthService).
-     * Declaring this bean stops Spring Boot generating a default in-memory user and logging
-     * its password, and guarantees no username/password lookup path exists outside AuthService.
-     */
+    
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {

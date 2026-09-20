@@ -20,17 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Fixed-window rate limiting per client IP, in two tiers:
- *  - POST /api/auth/login: a tight limit to slow credential brute-forcing
- *  - everything else: a generous limit to protect the API from abuse
- * Exceeding a limit returns 429 with a JSON body and a Retry-After header, and is logged.
- * Limits are configurable (rate-limit.* properties).
- *
- * Known limitations (evaluated in the report): state is in memory and per instance (a shared
- * store such as Redis/Bucket4j would be needed behind a load balancer), fixed windows allow
- * short bursts at window boundaries, and the client IP is the direct peer address.
- */
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 

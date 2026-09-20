@@ -38,10 +38,6 @@ public class LeaveAllowanceController {
         this.getLeaveUsageReportService = getLeaveUsageReportService;
     }
 
-    /**
-     * Administrator usage report: company-wide by default, optionally for one business year
-     * and/or one manager's team.
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LeaveUsageReportDto> getUsageReport(

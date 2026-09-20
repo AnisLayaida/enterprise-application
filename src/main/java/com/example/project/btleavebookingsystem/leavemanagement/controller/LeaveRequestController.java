@@ -112,10 +112,6 @@ public class LeaveRequestController {
         return ResponseEntity.ok(getTeamPendingRequestsService.getForManager(user.staffId(), startDate, endDate));
     }
 
-    /**
-     * Administrator view of outstanding requests: company-wide by default,
-     * optionally filtered by staff member and/or by a manager's team (filters combine with AND).
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<LeaveRequestResponseDto>> getOutstanding(

@@ -5,11 +5,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * One immutable entry in a leave request's event stream.
- * Append-only: every column is non-updatable and there are no setters.
- * UNIQUE(aggregate_id, sequence_number) gives optimistic concurrency control on each stream.
- */
 @Entity
 @Table(name = "leave_event_store",
         uniqueConstraints = @UniqueConstraint(

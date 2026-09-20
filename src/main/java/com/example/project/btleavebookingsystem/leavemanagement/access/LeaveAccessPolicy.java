@@ -15,7 +15,6 @@ public class LeaveAccessPolicy {
         this.staffDirectory = staffDirectory;
     }
 
-    /** Owners may withdraw their own request; administrators may cancel on anyone's behalf. */
     public void assertCanCancel(ActingUser actor, UUID requestOwnerId) {
         if (actor.admin() || actor.staffId().equals(requestOwnerId)) {
             return;
@@ -23,7 +22,6 @@ public class LeaveAccessPolicy {
         throw new AccessDeniedException("Only the requester or an administrator can cancel this leave request");
     }
 
-    /** The requester's line manager, or an administrator, may review - but never the requester. */
     public void assertCanReview(ActingUser actor, UUID requestOwnerId) {
         rejectSelfApproval(actor, requestOwnerId);
         if (actor.admin() || isLineManagerOf(actor, requestOwnerId)) {

@@ -69,11 +69,6 @@ public class LeaveRequest {
         return request;
     }
 
-    /**
-     * Manager review. Where HR approval is required the request is escalated (an event records
-     * the manager's recommendation); otherwise the manager's decision is final.
-     * Every state change raises an event, so the event stream fully describes the lifecycle.
-     */
     public void reviewByManager(boolean approved) {
         RequestStatus next = requiresHRApproval
                 ? RequestStatus.MANAGER_REVIEWED
