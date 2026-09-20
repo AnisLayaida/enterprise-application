@@ -42,4 +42,4 @@ build/
 secrets.properties
 
 ### Local H2 file-based database (if the 'local' profile is used) ###
-data/
+data/.DS_Store
