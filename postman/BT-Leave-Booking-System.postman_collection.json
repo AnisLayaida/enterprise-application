@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "c55e0fd8-b066-4add-ba8a-cbf1412fea93",
+    "_postman_id": "a4dd3967-d957-493e-8cbb-5a4f70753cb6",
     "name": "BT Leave Booking System API collection",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "41567812"
@@ -73,7 +73,8 @@
                   "    const body = pm.response.json();",
                   "    pm.expect(body.username).to.eql(\"admin\");",
                   "    pm.expect(body.role).to.eql(\"ADMIN\");",
-                  "});"
+                  "});",
+                  "pm.collectionVariables.set(\"adminStaffId\", pm.response.json().staffId);"
                 ]
               }
             }
@@ -418,6 +419,124 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "7a. Add Staff Member - Tom (Staff, no manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tom created with no line manager; id captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.lineManagerId).to.be.null;",
+                  "    pm.collectionVariables.set(\"tomId\", body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Tom\",\n  \"surname\": \"Other\",\n  \"email\": \"tom.other@bt.com\",\n  \"hireDate\": \"2024-01-08\",\n  \"department\": \"Networks\",\n  \"lineManagerId\": null,\n  \"jobLevel\": \"Engineer\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"username\": \"tom.other\",\n  \"password\": \"TomPass123!\",\n  \"role\": \"STAFF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "staff"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7b. Add Staff Member - Mark (Manager, different team)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Mark created; id captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.jobLevel).to.eql(\"Manager\");",
+                  "    pm.collectionVariables.set(\"markId\", body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Mark\",\n  \"surname\": \"Manager\",\n  \"email\": \"mark.manager@bt.com\",\n  \"hireDate\": \"2021-06-01\",\n  \"department\": \"Networks\",\n  \"lineManagerId\": null,\n  \"jobLevel\": \"Manager\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"username\": \"mark.manager\",\n  \"password\": \"MarkPass123!\",\n  \"role\": \"MANAGER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "staff"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -498,6 +617,112 @@
             "body": {
               "mode": "raw",
               "raw": "{\n\t\"username\": \"jane.doe\",\n\t\"password\": \"StaffPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9a. Login As Tom (Staff)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tom logs in as STAFF; token captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql(\"STAFF\");",
+                  "    pm.collectionVariables.set(\"tomToken\", body.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tom.other\",\n  \"password\": \"TomPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9b. Login As Mark (Manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mark logs in as MANAGER; token captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql(\"MANAGER\");",
+                  "    pm.collectionVariables.set(\"markToken\", body.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"mark.manager\",\n  \"password\": \"MarkPass123!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1073,6 +1298,65 @@
           "response": []
         },
         {
+          "name": "[Negative] Manager Outside Team Cannot Review Request A (Mark)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 (object-level authorisation)\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Error body identifies Forbidden\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Forbidden\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{markToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestAId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestAId}}",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "16. Review Leave Request A - Approve (Sarah, Manager)",
           "event": [
             {
@@ -1165,6 +1449,50 @@
                 "api",
                 "leave-allowance",
                 "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Another Staff Member Cannot Cancel Request A (Tom)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 (only the owner or an admin may cancel)\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Error body identifies Forbidden\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Forbidden\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tomToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestAId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestAId}}",
+                "cancel"
               ]
             }
           },
@@ -1311,6 +1639,54 @@
                 "leave-requests",
                 "{{requestAId}}",
                 "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20a. Get Request A Event History (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Event stream is Submitted -> Approved -> Cancelled and replays consistently\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.events.map(e => e.eventType)).to.eql([",
+                  "        \"LeaveRequestSubmittedEvent\", \"LeaveRequestApprovedEvent\", \"LeaveRequestCancelledEvent\"]);",
+                  "    pm.expect(body.replayedStatus).to.eql(\"CANCELLED\");",
+                  "    pm.expect(body.consistent).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestAId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestAId}}",
+                "history"
               ]
             }
           },
@@ -1735,6 +2111,104 @@
           "response": []
         },
         {
+          "name": "24a. Get Outstanding Requests - Sarah's Team (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Only Sarah's team (Jane) appears, including Request B\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.every(r => r.staffId === pm.collectionVariables.get(\"janeId\"))).to.be.true;",
+                  "    pm.expect(body.map(r => r.id)).to.include(pm.collectionVariables.get(\"requestBId\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests?managerId={{sarahId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ],
+              "query": [
+                {
+                  "key": "managerId",
+                  "value": "{{sarahId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "24b. Get Outstanding Requests - Mark's Team (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mark has no reports, so the filtered view is empty\", () => {",
+                  "    pm.expect(pm.response.json()).to.eql([]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests?managerId={{markId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ],
+              "query": [
+                {
+                  "key": "managerId",
+                  "value": "{{markId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "25. Resolve HR Review B - Approve (Admin)",
           "event": [
             {
@@ -1833,11 +2307,495 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "26a. Get Request B Event History (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Event stream records the HR escalation and replays to APPROVED\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.events.map(e => e.eventType)).to.eql([",
+                  "        \"LeaveRequestSubmittedEvent\", \"LeaveRequestEscalatedToHREvent\", \"LeaveRequestApprovedEvent\"]);",
+                  "    pm.expect(body.replayedStatus).to.eql(\"APPROVED\");",
+                  "    pm.expect(body.consistent).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestBId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestBId}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26b. Submit Leave Request C - To Be Rejected (Jane)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Request C is PENDING; id captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(\"PENDING\");",
+                  "    pm.collectionVariables.set(\"requestCId\", body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"ANNUAL\",\n  \"startDate\": \"2026-12-07\",\n  \"endDate\": \"2026-12-09\",\n  \"reason\": \"Christmas shopping trip\",\n  \"requiresHRApproval\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26c. Reject Leave Request C (Sarah, Manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Request C is REJECTED\", () => {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"REJECTED\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestCId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestCId}}",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26d. Get My Leave Balance - Unchanged After Rejection (Jane)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Rejection deducts nothing (still 26)\", () => {",
+                  "    pm.expect(pm.response.json().remainingDays).to.eql(26);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-allowance/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-allowance",
+                "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26e. Submit Leave Request D - Sick Leave (Jane)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Request D is SICK leave; id captured\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.leaveType).to.eql(\"SICK\");",
+                  "    pm.collectionVariables.set(\"requestDId\", body.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2026-12-14\",\n  \"endDate\": \"2026-12-15\",\n  \"reason\": \"Unwell\",\n  \"requiresHRApproval\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26f. Approve Sick Leave D (Sarah, Manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Request D is APPROVED\", () => {",
+                  "    pm.expect(pm.response.json().status).to.eql(\"APPROVED\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestDId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestDId}}",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26g. Get My Leave Balance - Sick Leave Not Deducted (Jane)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Approved SICK leave does not reduce annual allowance (still 26)\", () => {",
+                  "    pm.expect(pm.response.json().remainingDays).to.eql(26);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-allowance/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-allowance",
+                "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Submit Leave Request - Missing Required Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422 (bean validation)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Message names the missing field\", () => {",
+                  "    pm.expect(pm.response.json().message).to.include(\"leaveType\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-12-21\",\n  \"endDate\": \"2026-12-22\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Submit Leave Request - End Date Before Start Date",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400 (value-object invariant)\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Message explains the invalid range\", () => {",
+                  "    pm.expect(pm.response.json().message).to.eql(\"End date cannot be before start date\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"ANNUAL\",\n  \"startDate\": \"2026-12-22\",\n  \"endDate\": \"2026-12-21\",\n  \"reason\": \"Backwards dates\",\n  \"requiresHRApproval\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "7. Roles",
+      "name": "7. Roles, Users & Reporting",
       "item": [
         {
           "name": "27. Get All Roles (Admin)",
@@ -1932,6 +2890,372 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "27a. Get Leave Usage Report 2026 (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Jane: 30 entitled, 4 used (Request B only - rejected and sick leave excluded), 26 remaining\", () => {",
+                  "    const jane = pm.response.json().staff.find(s => s.staffId === pm.collectionVariables.get(\"janeId\"));",
+                  "    pm.expect(jane.entitledDays).to.eql(30);",
+                  "    pm.expect(jane.usedDays).to.eql(4);",
+                  "    pm.expect(jane.remainingDays).to.eql(26);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-allowance?businessYear=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-allowance"
+              ],
+              "query": [
+                {
+                  "key": "businessYear",
+                  "value": "2026"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Manager Cannot View Usage Report (Sarah)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Error body identifies Forbidden\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Forbidden\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-allowance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-allowance"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27b. Promote Tom To Manager (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tom's role is now MANAGER\", () => {",
+                  "    pm.expect(pm.response.json().role).to.eql(\"MANAGER\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"MANAGER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{tomId}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{tomId}}",
+                "role"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27c. [Known Limitation] Tom's Existing Token Still Carries STAFF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Stateless JWT: the old token keeps the old role until expiry or re-login\", () => {",
+                  "    pm.expect(pm.response.json().role).to.eql(\"STAFF\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tomToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27d. Re-Login As Tom - New Role Applied",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"A fresh token carries MANAGER\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql(\"MANAGER\");",
+                  "    pm.collectionVariables.set(\"tomToken\", body.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tom.other\",\n  \"password\": \"TomPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Admin Cannot Change Their Own Role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 (no self-change)\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Error body identifies Forbidden\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Forbidden\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"STAFF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{adminStaffId}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{adminStaffId}}",
+                "role"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Staff Cannot Escalate Their Own Privileges (Jane)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403 (privilege escalation blocked)\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Error body identifies Forbidden\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Forbidden\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{janeId}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{janeId}}",
+                "role"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -1969,6 +3293,361 @@
                 "api",
                 "leave-requests",
                 "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Current User Without Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401 (was a 500 before the fix)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error body identifies Unauthorized\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Unauthorized\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Tampered JWT Is Rejected",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401 (signature verification fails)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Error body identifies Unauthorized\", () => {",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Unauthorized\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}tampered",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Invalid UUID In Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Message names the invalid parameter\", () => {",
+                  "    pm.expect(pm.response.json().message).to.eql(\"Invalid value for parameter 'id'\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "not-a-uuid"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Malformed JSON Body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Standard JSON error contract\", () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "    pm.expect(body.message).to.include(\"Malformed request body\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{janeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"leaveType\": \"ANNUAL\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Duplicate Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 409 (was a 500 before the fix)\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Conflict explained without leaking database detail\", () => {",
+                  "    pm.expect(pm.response.json().message).to.include(\"duplicate username\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Tom\",\n  \"surname\": \"Duplicate\",\n  \"email\": \"tom.duplicate@bt.com\",\n  \"hireDate\": \"2024-01-08\",\n  \"department\": \"Networks\",\n  \"lineManagerId\": null,\n  \"jobLevel\": \"Engineer\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"username\": \"tom.other\",\n  \"password\": \"TomPass123!\",\n  \"role\": \"STAFF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "staff"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Negative] Review Without A Decision (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 422 (bean validation)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Message names the missing decision\", () => {",
+                  "    pm.expect(pm.response.json().message).to.include(\"approved\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leave-requests/{{requestCId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leave-requests",
+                "{{requestCId}}",
+                "review"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[Security] Login Rate Limit Triggers 429",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const attempts = Number(pm.collectionVariables.get(\"rateLimitAttempts\") || 0) + 1;",
+                  "pm.collectionVariables.set(\"rateLimitAttempts\", attempts);",
+                  "",
+                  "if (pm.response.code === 429) {",
+                  "    pm.test(\"Repeated failed logins are throttled with 429\", () => pm.response.to.have.status(429));",
+                  "    pm.test(\"429 has JSON body and Retry-After header\", () => {",
+                  "        pm.expect(pm.response.json().error).to.eql(\"Too Many Requests\");",
+                  "        pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "    });",
+                  "    pm.collectionVariables.unset(\"rateLimitAttempts\");",
+                  "} else if (attempts < 40) {",
+                  "    pm.execution.setNextRequest(pm.info.requestName);",
+                  "} else {",
+                  "    pm.test(\"Rate limit triggered within 40 attempts\", () => pm.expect.fail(\"No 429 after 40 attempts\"));",
+                  "    pm.collectionVariables.unset(\"rateLimitAttempts\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
               ]
             }
           },
@@ -2032,6 +3711,34 @@
     },
     {
       "key": "requestBId",
+      "value": ""
+    },
+    {
+      "key": "adminStaffId",
+      "value": ""
+    },
+    {
+      "key": "tomId",
+      "value": ""
+    },
+    {
+      "key": "markId",
+      "value": ""
+    },
+    {
+      "key": "tomToken",
+      "value": ""
+    },
+    {
+      "key": "markToken",
+      "value": ""
+    },
+    {
+      "key": "requestCId",
+      "value": ""
+    },
+    {
+      "key": "requestDId",
       "value": ""
     }
   ]
